@@ -18,6 +18,7 @@
         <module>olympia-service</module>
         <module>olympia-dao</module>
         <module>olympia-domain</module>
+        <module>olympia-common</module>
     </modules>
 
     <dependencyManagement>
