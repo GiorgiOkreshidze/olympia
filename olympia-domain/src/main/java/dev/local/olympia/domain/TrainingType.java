@@ -8,7 +8,8 @@ public enum TrainingType {
     SPEED("Speed Training"),
     AGILITY("Agility Training"),
     POWER("Power Training"),
-    RECOVERY("Recovery"),;
+    RECOVERY("Recovery"),
+    OTHER("Other"),;
 
     private final String displayName;
 
