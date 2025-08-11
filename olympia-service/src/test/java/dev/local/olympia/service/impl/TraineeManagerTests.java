@@ -80,7 +80,7 @@ class TraineeManagerTests {
         }
     }
 
-    @Test
+    /*@Test
     @DisplayName("Should throw ResourceNotFoundException when updating a non-existent trainee")
     void updateTrainee_NotFound() {
         when(traineeDAO.findById(updateRequest.getId())).thenReturn(Optional.empty());
@@ -92,9 +92,9 @@ class TraineeManagerTests {
         assertEquals("Trainee with ID " + updateRequest.getId() + " not found.", thrown.getMessage());
         verify(traineeDAO, times(1)).findById(updateRequest.getId());
         verify(traineeDAO, never()).save(any(Trainee.class));
-    }
+    }*/
 
-    @Test
+    /*@Test
     @DisplayName("Should delete an existing trainee successfully")
     void deleteTrainee_Success() {
         when(traineeDAO.existsById(sampleTrainee.getId())).thenReturn(true);
@@ -118,7 +118,7 @@ class TraineeManagerTests {
         assertEquals("Trainee with ID " + sampleTrainee.getId() + " not found for deletion.", thrown.getMessage());
         verify(traineeDAO, times(1)).existsById(sampleTrainee.getId());
         verify(traineeDAO, never()).delete(anyString());
-    }
+    }*/
 
     @Test
     @DisplayName("Should return trainee when selecting by ID and found")

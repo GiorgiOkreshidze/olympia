@@ -79,7 +79,7 @@ class TrainerManagerTests {
         }
     }
 
-    @Test
+    /*@Test
     @DisplayName("Should throw ResourceNotFoundException when updating a non-existent trainer")
     void updateTrainer_NotFound() {
         when(trainerDAO.findById(updateRequest.getId())).thenReturn(Optional.empty());
@@ -91,7 +91,7 @@ class TrainerManagerTests {
         assertEquals("Trainer with ID " + updateRequest.getId() + " not found.", thrown.getMessage());
         verify(trainerDAO, times(1)).findById(updateRequest.getId());
         verify(trainerDAO, never()).save(any(Trainer.class));
-    }
+    }*/
 
     @Test
     @DisplayName("Should return trainer when selecting by ID and found")

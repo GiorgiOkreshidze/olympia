@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface TrainingSessionService {
     Training createTraining(TrainingCreationRequest request);
+
     Optional<Training> selectTrainingById(String id);
     List<Training> selectAllTrainings();
 }

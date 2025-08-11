@@ -44,9 +44,15 @@ public class TrainingManager implements TrainingSessionService {
             throw new ResourceNotFoundException("Trainer with ID " + request.getTrainerId() + " not found.");
         }
 
+        var trainee = traineeDAO.findById(request.getTraineeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Trainee with ID " + request.getTraineeId() + " not found."));
+        var trainer = trainerDAO.findById(request.getTrainerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Trainer with ID " + request.getTrainerId() + " not found."));
+
+
         Training newTraining = new Training(
-                request.getTraineeId(),
-                request.getTrainerId(),
+                trainee,
+                trainer,
                 request.getTrainingName(),
                 request.getTrainingType(),
                 request.getTrainingDate(),
@@ -54,8 +60,7 @@ public class TrainingManager implements TrainingSessionService {
         );
 
         Training savedTraining = trainingDAO.save(newTraining);
-        logger.info("Successfully created and saved training with ID: {} for Trainee: {} and Trainer: {}",
-                savedTraining.getId(), savedTraining.getTraineeId(), savedTraining.getTrainerId());
+        logger.info("Training created successfully with ID: {}", savedTraining.getId());
         return savedTraining;
     }
 
