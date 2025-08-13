@@ -92,6 +92,9 @@ public class Training {
     }
 
     // --- Setters ---
+    public void setId(String id) {
+        this.id = id;
+    }
     public void setTrainee(Trainee trainee) {
         this.trainee = trainee;
     }
@@ -148,7 +151,7 @@ public class Training {
                 ", trainingName='" + trainingName + '\'' +
                 ", trainingType=" + (trainingType != null ? trainingType.getTrainingTypeName() : "null") +
                 ", trainingDate=" + trainingDate +
-                ", trainingDuration=" + getTrainingDuration() +
+                ", trainingDuration=" + getTrainingDurationSeconds() +
                 '}';
     }
 }

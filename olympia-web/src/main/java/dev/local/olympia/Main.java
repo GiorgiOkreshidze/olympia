@@ -5,14 +5,18 @@ import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.domain.Trainer;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.domain.TrainingType;
+import dev.local.olympia.dto.AuthCredentials;
 import dev.local.olympia.dto.trainee.TraineeCreationRequest;
 import dev.local.olympia.dto.trainee.TraineeUpdateRequest;
 import dev.local.olympia.dto.trainer.TrainerCreationRequest;
+import dev.local.olympia.dto.trainer.TrainerUpdateRequest;
 import dev.local.olympia.dto.training.TrainingCreationRequest;
 import dev.local.olympia.exception.ResourceNotFoundException;
 import dev.local.olympia.service.interfaces.TraineeService;
 import dev.local.olympia.service.interfaces.TrainerService;
 import dev.local.olympia.service.interfaces.TrainingSessionService;
+import dev.local.olympia.util.PasswordGenerator;
+import dev.local.olympia.util.UsernameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -35,15 +39,11 @@ public class Main {
         TraineeService traineeService = context.getBean(TraineeService.class);
         TrainerService trainerService = context.getBean(TrainerService.class);
         TrainingSessionService trainingSessionService = context.getBean(TrainingSessionService.class);
+        UsernameGenerator usernameGenerator = context.getBean(UsernameGenerator.class);
+        PasswordGenerator passwordGenerator = context.getBean(PasswordGenerator.class);
 
         try {
-            // Create a new trainer
-            TrainerCreationRequest trainerRequest = new TrainerCreationRequest(
-                    "Jane", "Doe", "Yoga Specialist"
-            );
-            Trainer newTrainer = trainerService.createTrainer(trainerRequest);
-            logger.info("Created new trainer: {}", newTrainer);
-
+            traineeService.deleteTrainee("new.user", new AuthCredentials("new.user", "MYV@4Ph4=r"));
 
         } catch (ResourceNotFoundException e) {
             logger.error("Resource not found: {}", e.getMessage());

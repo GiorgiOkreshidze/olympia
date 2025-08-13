@@ -68,6 +68,7 @@ public class HibernateTraineeDAO extends AbstractHibernateDAO<Trainee, String> i
         Session session = getCurrentSession();
         try {
                 session.remove(trainee);
+                session.remove(trainee.getUser());
         } catch (Exception e) {
             System.err.println("Error deleting trainee: " + e.getMessage());
         }
@@ -76,6 +77,15 @@ public class HibernateTraineeDAO extends AbstractHibernateDAO<Trainee, String> i
 
     @Override
     public boolean existsById(String id) {
-        return false;
+        Session session = getCurrentSession();
+        try {
+            Long count = session.createQuery("SELECT COUNT(t) FROM Trainee t WHERE t.user.id = :id", Long.class)
+                    .setParameter("id", id)
+                    .uniqueResult();
+            return count != null && count > 0;
+        } catch (Exception e) {
+            System.err.println("Error checking existence of trainee by ID: " + e.getMessage());
+            return false;
+        }
     }
 }

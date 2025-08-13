@@ -27,7 +27,7 @@ public class HibernateTrainingDAO extends AbstractHibernateDAO<Training, String>
     public Optional<Training> findById(String id) {
         Session session = getCurrentSession();
         try {
-            Training training = session.createQuery("FROM Training WHERE id = :id", Training.class)
+            Training training = session.createQuery("FROM Training t JOIN FETCH t.trainee JOIN FETCH t.trainer JOIN FETCH trainingType WHERE t.id = :id", Training.class)
                     .setParameter("id", id)
                     .uniqueResult();
             return Optional.ofNullable(training);
@@ -40,16 +40,16 @@ public class HibernateTrainingDAO extends AbstractHibernateDAO<Training, String>
     @Override
     public List<Training> findAll() {
         Session session = getCurrentSession();
-        return session.createQuery("FROM Training", Training.class).getResultList();
+        return session.createQuery("FROM Training t JOIN FETCH t.trainee JOIN FETCH t.trainer JOIN FETCH t.trainingType", Training.class).getResultList();
     }
 
     @Override
     public List<Training> findTrainingsByTrainee(Trainee trainee, LocalDate fromDate, LocalDate toDate, String trainerName, String trainingType) {
         Session session = getCurrentSession();
-        String hql = "FROM Training t WHERE t.trainee = :trainee " +
-                     "AND t.date >= :fromDate AND t.date <= :toDate " +
-                     "AND (:trainerName IS NULL OR t.trainer.name = :trainerName) " +
-                     "AND (:trainingType IS NULL OR t.training_type_name = :trainingType)";
+        String hql = "FROM Training t JOIN FETCH t.trainee JOIN FETCH t.trainer JOIN FETCH t.trainingType WHERE t.trainee = :trainee " +
+                     "AND t.trainingDate >= :fromDate AND t.trainingDate <= :toDate " +
+                     "AND (:trainerName IS NULL OR t.trainer.user.firstName = :trainerName) " +
+                     "AND (:trainingType IS NULL OR t.trainingType.trainingTypeName = :trainingType)";
 
         return session.createQuery(hql, Training.class)
                       .setParameter("trainee", trainee)

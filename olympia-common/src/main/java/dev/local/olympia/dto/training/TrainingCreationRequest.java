@@ -9,7 +9,7 @@ public class TrainingCreationRequest {
     private String traineeId;
     private String trainerId;
     private String trainingName;
-    private TrainingType trainingType;
+    private String trainingType;
     private LocalDate trainingDate;
     private Duration trainingDuration;
 
@@ -17,7 +17,7 @@ public class TrainingCreationRequest {
     }
 
     public TrainingCreationRequest(String traineeId, String trainerId, String trainingName,
-                                   TrainingType trainingType, LocalDate trainingDate, Duration trainingDuration) {
+                                   String trainingType, LocalDate trainingDate, Duration trainingDuration) {
         this.traineeId = traineeId;
         this.trainerId = trainerId;
         this.trainingName = trainingName;
@@ -39,7 +39,7 @@ public class TrainingCreationRequest {
         return trainingName;
     }
 
-    public TrainingType getTrainingType() {
+    public String getTrainingType() {
         return trainingType;
     }
 
@@ -64,7 +64,7 @@ public class TrainingCreationRequest {
         this.trainingName = trainingName;
     }
 
-    public void setTrainingType(TrainingType trainingType) {
+    public void setTrainingType(String trainingType) {
         this.trainingType = trainingType;
     }
 

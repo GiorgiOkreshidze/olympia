@@ -13,6 +13,13 @@ public class HibernateTrainingTypeDAO extends AbstractHibernateDAO<TrainingType,
     }
 
     @Override
+    public TrainingType save(TrainingType trainingType) {
+        Session session = getCurrentSession();
+        session.persist(trainingType);
+        return trainingType;
+    }
+
+    @Override
     public TrainingType findByName(String name) {
         Session session = getCurrentSession();
 
@@ -20,4 +27,12 @@ public class HibernateTrainingTypeDAO extends AbstractHibernateDAO<TrainingType,
                 .setParameter("name", name)
                 .uniqueResult();
     }
+
+    @Override
+    public int count() {
+        Session session = getCurrentSession();
+        Integer count = session.createQuery("SELECT COUNT(tt) FROM TrainingType tt", Integer.class).uniqueResult();
+        return count != null ? count : 0;
+    }
+
 }

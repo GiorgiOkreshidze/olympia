@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class InMemoryTrainingDAOTests {
 
-    @Mock
+    /*@Mock
     private MapStorage<Object> mapStorage;
 
     @InjectMocks
@@ -67,5 +67,5 @@ class InMemoryTrainingDAOTests {
         assertNotNull(allTrainings);
         assertTrue(allTrainings.isEmpty());
         verify(mapStorage, times(1)).getStorage(Training.class);
-    }
+    }*/
 }

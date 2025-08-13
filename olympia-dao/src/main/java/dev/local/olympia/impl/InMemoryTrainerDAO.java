@@ -76,6 +76,11 @@ public class InMemoryTrainerDAO implements TrainerDAO {
         return List.of();
     }
 
+    @Override
+    public List<Trainer> findUnassignedTrainers(String traineeUsername) {
+        return List.of();
+    }
+
     private Map<String, Trainer> getTrainerStorage() {
         return mapStorage.getStorage(Trainer.class);
     }
