@@ -4,12 +4,12 @@ import java.time.LocalDate;
 
 public class TraineeUpdateRequest {
 
-    private String id; // ID is crucial for updates
+    private String id;
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
     private String address;
-    private Boolean isActive; // Use Boolean to allow null (no change) or true/false
+    private Boolean isActive;
 
     public TraineeUpdateRequest() {
     }

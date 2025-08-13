@@ -7,10 +7,12 @@ import java.util.Optional;
 
 public interface TraineeDAO {
     Trainee save(Trainee trainee);
+
     Optional<Trainee> findById(String id);
+    Optional<Trainee> findByUsername(String username);
     List<Trainee> findAll();
-    void delete(String id);
+
+    void delete(Trainee Trainee);
+
     boolean existsById(String id);
-    Optional<Trainee> findByUsername(String username); // Added for username uniqueness check
-    List<Trainee> findByFirstNameAndLastName(String firstName, String lastName); // Added for username generation logic
 }

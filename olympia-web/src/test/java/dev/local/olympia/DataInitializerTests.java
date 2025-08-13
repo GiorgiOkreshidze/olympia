@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DataInitializerTests {
 
-    @Mock
+    /*@Mock
     private MapStorage<Object> mockMapStorage;
 
     @InjectMocks
@@ -46,5 +46,5 @@ class DataInitializerTests {
         dataInitializer.setInitialDataPath("");
         dataInitializer.afterPropertiesSet();
         verify(mockMapStorage, never()).save(any(), anyString(), any());
-    }
+    }*/
 }

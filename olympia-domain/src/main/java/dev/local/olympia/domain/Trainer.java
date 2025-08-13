@@ -1,32 +1,74 @@
 package dev.local.olympia.domain;
 
-public class Trainer extends User {
-    private String specialization;
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "trainers")
+public class Trainer {
+    @Id
+    private String id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_trainer_user")
+    )
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "specialization_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_trainer_specialization")
+    )
+    private TrainingType specialization;
+
+    @ManyToMany(mappedBy = "trainers")
+    private Set<Trainee> trainees = new HashSet<>();
 
     public Trainer(){
-        super();
     }
 
-    public Trainer(String firstName, String lastName, String username, String password, String specialization) {
-        super(firstName, lastName, username, password);
+    public Trainer(String firstName, String lastName, String username, String password, TrainingType specialization) {
+        this.user = new User(firstName, lastName, username, password);
         this.specialization = specialization;
     }
 
     // --- Getters ---
-    public String getSpecialization() {
+    public TrainingType getSpecialization() {
         return specialization;
+    }
+    public User getUser() {
+        return user;
+    }
+    public Set<Trainee> getTrainees() {
+        return trainees;
     }
 
     // --- Setters ---
-    public void setSpecialization(String specialization) {
+    public void setSpecialization(TrainingType specialization) {
         this.specialization = specialization;
+    }
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null) {
+            this.id = user.getId();
+        }
+    }
+    public void setTrainees(Set<Trainee> trainees) {
+        this.trainees = trainees;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        return super.equals(o);
+        if (!(o instanceof Trainer trainer)) return false;
+        return user != null && user.equals(trainer.user);
     }
 
     @Override
@@ -37,12 +79,12 @@ public class Trainer extends User {
     @Override
     public String toString() {
         return "Trainer{" +
-                "id='" + getId() + '\'' +
-                ", firstName='" + getFirstName() + '\'' +
-                ", lastName='" + getLastName() + '\'' +
-                ", username='" + getUsername() + '\'' +
+                "id='" + id + '\'' +
+                ", firstName='" + (user != null ? user.getFirstName() : null) + '\'' +
+                ", lastName='" + (user != null ? user.getLastName() : null) + '\'' +
+                ", username='" + (user != null ? user.getUsername() : null) + '\'' +
                 ", specialization='" + specialization + '\'' +
-                ", isActive=" + isActive() +
+                ", isActive=" + (user != null && user.isActive()) +
                 '}';
     }
 }

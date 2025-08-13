@@ -2,7 +2,9 @@ package dev.local.olympia;
 
 import dev.local.olympia.config.AppConfig;
 import dev.local.olympia.domain.TrainingType;
+import dev.local.olympia.dto.AuthCredentials;
 import dev.local.olympia.dto.trainee.TraineeCreationRequest;
+import dev.local.olympia.dto.trainer.TrainerCreationRequest;
 import dev.local.olympia.dto.training.TrainingCreationRequest;
 import dev.local.olympia.interfaces.TraineeDAO;
 import dev.local.olympia.interfaces.TrainerDAO;
@@ -56,21 +58,49 @@ class MainTests {
         TrainerService trainerProfileService = context.getBean(TrainerService.class);
         TrainingSessionService trainingSessionService = context.getBean(TrainingSessionService.class);
 
-        int initialTraineeCount = traineeProfileService.selectAllTrainees().size();
-        traineeProfileService.createTrainee(new TraineeCreationRequest(
+        var trainee = traineeProfileService.createTrainee(new TraineeCreationRequest(
                 "New", "User", LocalDate.of(2000, 1, 1), "New Address"));
-        assertEquals(initialTraineeCount + 1, traineeProfileService.selectAllTrainees().size());
 
-        assertNotNull(traineeProfileService.selectTraineeById(traineeProfileService.selectAllTrainees().get(0).getId()));
+        var authCredentialsTrainee = new AuthCredentials(
+                trainee.getUser().getUsername(),
+                trainee.getUser().getPassword()
+        );
 
-        if (!traineeProfileService.selectAllTrainees().isEmpty() && !trainerProfileService.selectAllTrainers().isEmpty()) {
-            String traineeId = traineeProfileService.selectAllTrainees().get(0).getId();
-            String trainerId = trainerProfileService.selectAllTrainers().get(0).getId();
+        var trainer = trainerProfileService.createTrainer(new TrainerCreationRequest(
+                "trainer",
+                "lastName",
+                "Yoga"
+        ));
+
+        var authCredentialsTrainer = new AuthCredentials(
+                trainer.getUser().getUsername(),
+                trainer.getUser().getPassword()
+        );
+
+        int initialTraineeCount = traineeProfileService.selectAllTrainees(authCredentialsTrainee).size();
+
+        var trainee2 = traineeProfileService.createTrainee(new TraineeCreationRequest(
+                "New", "User", LocalDate.of(2000, 1, 1), "New Address"));
+
+        assertEquals(initialTraineeCount + 1, traineeProfileService.selectAllTrainees(authCredentialsTrainee).size());
+
+        assertNotNull(traineeProfileService.selectTraineeById(
+                traineeProfileService.selectAllTrainees(authCredentialsTrainee).getFirst().getUser().getId(),
+                authCredentialsTrainee)
+        );
+
+        if (!traineeProfileService.selectAllTrainees(authCredentialsTrainee).isEmpty() &&
+                !trainerProfileService.selectAllTrainers(authCredentialsTrainer).isEmpty()) {
+            String traineeId = traineeProfileService.selectAllTrainees(authCredentialsTrainee).getFirst().getUser().getId();
+            String trainerId = trainerProfileService.selectAllTrainers(authCredentialsTrainer).getFirst().getUser().getId();
             assertDoesNotThrow(() -> trainingSessionService.createTraining(
                     new TrainingCreationRequest(
-                            traineeId, trainerId, "Integration Test Training", TrainingType.STRENGTH, LocalDate.now(), Duration.ofHours(1)
+                            traineeId, trainerId, "Integration Test Training", "Yoga", LocalDate.now(), Duration.ofHours(1)
                     )
             ));
         }
+
+        traineeProfileService.deleteTrainee(trainee2.getUser().getUsername(), authCredentialsTrainee);
+        traineeProfileService.deleteTrainee(trainee.getUser().getUsername(), authCredentialsTrainee);
     }
 }
