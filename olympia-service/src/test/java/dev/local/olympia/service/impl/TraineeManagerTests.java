@@ -2,9 +2,10 @@
 package dev.local.olympia.service.impl;
 
 import dev.local.olympia.domain.Trainee;
-import dev.local.olympia.dto.AuthCredentials;
-import dev.local.olympia.dto.trainee.TraineeCreationRequest;
-import dev.local.olympia.dto.trainee.TraineeUpdateRequest;
+import dev.local.olympia.dto.auth.AuthCredentials;
+import dev.local.olympia.dto.trainee.requests.TraineeCreationRequest;
+import dev.local.olympia.dto.trainee.requests.TraineeUpdateRequest;
+import dev.local.olympia.dto.trainee.responses.TraineeProfileResponse;
 import dev.local.olympia.exception.ResourceNotFoundException;
 import dev.local.olympia.interfaces.TraineeDAO;
 import dev.local.olympia.interfaces.TrainerDAO;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -89,7 +89,7 @@ class TraineeManagerTests {
         // Arrange
         when(usernameGenerator.generateBaseUsername("Jane", "Smith"))
                 .thenReturn("jane.smith");
-        when(usernameGenerator.generateUniqueUsername(eq("jane.smith"), any(UsernameGenerator.UsernameExistsChecker.class)))
+        when(usernameGenerator.generateUniqueUsername(eq("jane.smith")))
                 .thenReturn("jane.smith");
         when(passwordGenerator.generateRandomPassword(10))
                 .thenReturn("generatedPwd");
@@ -102,19 +102,15 @@ class TraineeManagerTests {
                 });
 
         // Act
-        Trainee createdTrainee = traineeManager.createTrainee(creationRequest);
+        AuthCredentials credentials = traineeManager.createTrainee(creationRequest);
 
         // Assert
-        assertNotNull(createdTrainee);
-        assertNotNull(createdTrainee.getUser().getId());
-        assertEquals("Jane", createdTrainee.getUser().getFirstName());
-        assertEquals("Smith", createdTrainee.getUser().getLastName());
-        assertEquals("jane.smith", createdTrainee.getUser().getUsername());
-        assertEquals("generatedPwd", createdTrainee.getUser().getPassword());
-        assertTrue(createdTrainee.getUser().isActive());
+        assertNotNull(credentials);
+        assertEquals("jane.smith", credentials.getUsername());
+        assertEquals("generatedPwd", credentials.getPassword());
 
         verify(usernameGenerator).generateBaseUsername("Jane", "Smith");
-        verify(usernameGenerator).generateUniqueUsername(eq("jane.smith"), any(UsernameGenerator.UsernameExistsChecker.class));
+        verify(usernameGenerator).generateUniqueUsername(eq("jane.smith"));
         verify(passwordGenerator).generateRandomPassword(10);
         verify(traineeDAO).save(any(Trainee.class));
     }
@@ -123,9 +119,8 @@ class TraineeManagerTests {
     @DisplayName("Should return trainee when selecting by ID and found")
     void selectTraineeById_Found() {
         when(traineeDAO.findById(sampleTrainee.getUser().getId())).thenReturn(Optional.of(sampleTrainee));
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
 
-        Optional<Trainee> result = traineeManager.selectTraineeById(sampleTrainee.getUser().getId(), authCredentials);
+        Optional<Trainee> result = traineeManager.selectTraineeById(sampleTrainee.getUser().getId());
 
         assertTrue(result.isPresent());
         assertEquals(sampleTrainee, result.get());
@@ -136,9 +131,8 @@ class TraineeManagerTests {
     @DisplayName("Should return empty optional when selecting by ID and not found")
     void selectTraineeById_NotFound() {
         when(traineeDAO.findById("nonExistentId")).thenReturn(Optional.empty());
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
 
-        Optional<Trainee> result = traineeManager.selectTraineeById("nonExistentId", authCredentials);
+        Optional<Trainee> result = traineeManager.selectTraineeById("nonExistentId");
 
         assertTrue(result.isEmpty());
         verify(traineeDAO, times(1)).findById("nonExistentId");
@@ -149,9 +143,8 @@ class TraineeManagerTests {
     void selectAllTrainees_Success() {
         List<Trainee> trainees = Arrays.asList(sampleTrainee, new Trainee());
         when(traineeDAO.findAll()).thenReturn(trainees);
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
 
-        List<Trainee> result = traineeManager.selectAllTrainees(authCredentials);
+        List<Trainee> result = traineeManager.selectAllTrainees();
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -164,20 +157,23 @@ class TraineeManagerTests {
     void selectTraineeByUsername_Found() {
         when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
 
-        Optional<Trainee> result = traineeManager.selectTraineeByUsername(sampleTrainee.getUser().getUsername(), authCredentials);
+        Optional<TraineeProfileResponse> result = traineeManager.selectTraineeByUsername(sampleTrainee.getUser().getUsername());
 
         assertTrue(result.isPresent());
-        assertEquals(sampleTrainee, result.get());
-        verify(traineeDAO, times(2)).findByUsername(sampleTrainee.getUser().getUsername());
+        assertEquals(sampleTrainee.getUser().getUsername(), result.get().getUsername());
+        assertEquals(sampleTrainee.getUser().getFirstName(), result.get().getFirstName());
+        assertEquals(sampleTrainee.getUser().getLastName(), result.get().getLastName());
+        assertEquals(sampleTrainee.getDateOfBirth(), result.get().getDateOfBirth());
+        assertEquals(sampleTrainee.getAddress(), result.get().getAddress());
+        verify(traineeDAO, times(1)).findByUsername(sampleTrainee.getUser().getUsername());
     }
 
     @Test
     @DisplayName("Should return empty optional when selecting by username and not found")
     void selectTraineeByUsername_NotFound() {
         when(traineeDAO.findByUsername("nonExistentUsername")).thenReturn(Optional.empty());
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
 
-        Optional<Trainee> result = traineeManager.selectTraineeByUsername("nonExistentUsername", authCredentials);
+        Optional<TraineeProfileResponse> result = traineeManager.selectTraineeByUsername("nonExistentUsername");
 
         assertTrue(result.isEmpty());
         verify(traineeDAO, times(1)).findByUsername("nonExistentUsername");
@@ -186,39 +182,37 @@ class TraineeManagerTests {
     @Test
     @DisplayName("Should throw ResourceNotFoundException when updating a non-existent trainee")
     void updateTrainee_NotFound() {
-        when(traineeDAO.findById(updateRequest.getId())).thenReturn(Optional.empty());
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
+        when(traineeDAO.findByUsername(updateRequest.getUsername())).thenReturn(Optional.empty());
 
         ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> {
-            traineeManager.updateTrainee(updateRequest, authCredentials);
+            traineeManager.updateTrainee(updateRequest);
         });
 
-        assertEquals("Trainee with ID " + updateRequest.getId() + " not found.", thrown.getMessage());
-        verify(traineeDAO, times(1)).findById(updateRequest.getId());
+        assertEquals("Trainee with Username " + updateRequest.getUsername() + " not found.", thrown.getMessage());
+        verify(traineeDAO, times(1)).findByUsername(updateRequest.getUsername());
         verify(traineeDAO, never()).save(any(Trainee.class));
     }
 
     @Test
     @DisplayName("Should update an existing trainee successfully")
     void updateTrainee_Success() {
-        when(traineeDAO.findById(updateRequest.getId())).thenReturn(Optional.of(sampleTrainee));
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
+        when(traineeDAO.findByUsername(updateRequest.getUsername())).thenReturn(Optional.of(sampleTrainee));
         when(traineeDAO.save(any(Trainee.class)))
                 .thenAnswer(invocation -> {
                     return invocation.getArgument(0);
                 });
 
-        Trainee updatedTrainee = traineeManager.updateTrainee(updateRequest, authCredentials);
+        TraineeProfileResponse updatedTrainee = traineeManager.updateTrainee(updateRequest);
 
         assertNotNull(updatedTrainee);
-        assertEquals(updateRequest.getId(), updatedTrainee.getUser().getId());
-        assertEquals(updateRequest.getFirstName(), updatedTrainee.getUser().getFirstName());
-        assertEquals(updateRequest.getLastName(), updatedTrainee.getUser().getLastName());
+        assertEquals(updateRequest.getUsername(), updatedTrainee.getUsername());
+        assertEquals(updateRequest.getFirstName(), updatedTrainee.getFirstName());
+        assertEquals(updateRequest.getLastName(), updatedTrainee.getLastName());
         assertEquals(updateRequest.getDateOfBirth(), updatedTrainee.getDateOfBirth());
         assertEquals(updateRequest.getAddress(), updatedTrainee.getAddress());
-        assertTrue(updatedTrainee.getUser().isActive());
+        assertTrue(updatedTrainee.getIsActive());
 
-        verify(traineeDAO, times(1)).findById(updateRequest.getId());
+        verify(traineeDAO, times(1)).findByUsername(updateRequest.getUsername());
         verify(traineeDAO, times(1)).save(any(Trainee.class));
     }
 
@@ -228,25 +222,23 @@ class TraineeManagerTests {
         when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
         doNothing().when(traineeDAO).delete(sampleTrainee);
 
-        traineeManager.deleteTrainee(sampleTrainee.getUser().getUsername(), authCredentials);
+        traineeManager.deleteTrainee(sampleTrainee.getUser().getUsername());
 
         verify(traineeDAO, times(1)).delete(sampleTrainee);
-        verify(traineeDAO, times(2)).findByUsername(sampleTrainee.getUser().getUsername());
+        verify(traineeDAO, times(1)).findByUsername(sampleTrainee.getUser().getUsername());
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException when deleting a non-existent trainee")
     void deleteTrainee_NotFound() {
-        when(traineeDAO.findByUsername(sampleTrainee.getUser().getUsername())).thenReturn(Optional.of(sampleTrainee));
-
         var nonExistentUsername = "nonExistentUsername";
+        when(traineeDAO.findByUsername(nonExistentUsername)).thenReturn(Optional.empty());
 
         ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> {
-            traineeManager.deleteTrainee(nonExistentUsername, authCredentials);
+            traineeManager.deleteTrainee(nonExistentUsername);
         });
 
         assertEquals("Trainee with username "+ nonExistentUsername +" not found.", thrown.getMessage());
-        verify(traineeDAO, times(1)).findByUsername(sampleTrainee.getUser().getUsername());
         verify(traineeDAO, never()).delete(new Trainee());
     }
 }

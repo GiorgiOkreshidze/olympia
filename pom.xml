@@ -11,16 +11,21 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <spring.version>6.2.9</spring.version>
+        <spring.version>6.2.10</spring.version>
         <slf4j.version>2.0.17</slf4j.version>
         <maven.surefire.version>3.5.3</maven.surefire.version>
         <maven.compiler.version>3.14.0</maven.compiler.version>
         <logback.version>1.5.18</logback.version>
         <hibernate.version>7.0.9.Final</hibernate.version>
+        <hibernate.validator.version>8.0.2.Final</hibernate.validator.version>
         <postgresql.version>42.7.7</postgresql.version>
         <hikari.version>7.0.0</hikari.version>
         <junit.jupiter.version>5.13.4</junit.jupiter.version>
         <mockito.version>5.18.0</mockito.version>
+        <jakarta.el.version>4.0.2</jakarta.el.version>
+        <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
+        <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+        <spring.boot.version>4.0.0-M1</spring.boot.version>
     </properties>
 
 
@@ -65,6 +70,11 @@
                 <artifactId>spring-jdbc</artifactId>
                 <version>${spring.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -83,6 +93,12 @@
                 <artifactId>hibernate-core</artifactId>
                 <version>${hibernate.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate.validator.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
@@ -121,8 +137,26 @@
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>jakarta.el</artifactId>
-                <version>4.0.2</version>
+                <version>${jakarta.el.version}</version>
             </dependency>
+            <dependency>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>${jakarta.persistence.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta.servlet.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring.boot.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

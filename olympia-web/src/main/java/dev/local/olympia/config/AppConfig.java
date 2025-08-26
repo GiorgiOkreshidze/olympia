@@ -14,11 +14,4 @@ import org.springframework.context.annotation.*;
 @PropertySource("classpath:application.properties")
 @Import(HibernateConfig.class)
 public class AppConfig {
-
-    @Bean
-    public UsernameGenerator.UsernameExistsChecker usernameExistsChecker(TraineeDAO traineeDAO, TrainerDAO trainerDAO) {
-        return username ->
-                traineeDAO.findByUsername(username).isPresent() ||
-                        trainerDAO.findByUsername(username).isPresent();
-    }
 }

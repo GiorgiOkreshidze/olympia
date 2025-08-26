@@ -1,7 +1,7 @@
-package dev.local.olympia.dto.trainer;
+package dev.local.olympia.dto.trainer.requests;
 
 public class TrainerUpdateRequest {
-    private String id; // ID is crucial for updates
+    private String username;
     private String firstName;
     private String lastName;
     private String specialization;
@@ -10,8 +10,13 @@ public class TrainerUpdateRequest {
     public TrainerUpdateRequest() {
     }
 
-    public TrainerUpdateRequest(String id, String firstName, String lastName,  String specialization, Boolean isActive) {
-        this.id = id;
+    public TrainerUpdateRequest(
+            String username,
+            String firstName,
+            String lastName,
+            String specialization,
+            Boolean isActive) {
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.specialization = specialization;
@@ -19,8 +24,8 @@ public class TrainerUpdateRequest {
     }
 
     // Getters
-    public String getId() {
-        return id;
+    public String getUsername() {
+        return username;
     }
 
     public String getFirstName() {
@@ -40,8 +45,8 @@ public class TrainerUpdateRequest {
     }
 
     // Setters
-    public void setId(String id) {
-        this.id = id;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setFirstName(String firstName) {

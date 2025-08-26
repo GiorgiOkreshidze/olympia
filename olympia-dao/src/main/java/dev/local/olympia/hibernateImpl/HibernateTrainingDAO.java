@@ -4,12 +4,14 @@ import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.interfaces.TrainingDAO;
 import org.hibernate.Session;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Primary
 @Repository("hibernateTrainingDAO")
 public class HibernateTrainingDAO extends AbstractHibernateDAO<Training, String> implements TrainingDAO {
     public HibernateTrainingDAO() {

@@ -1,4 +1,4 @@
-package dev.local.olympia.dto;
+package dev.local.olympia.dto.auth;
 
 public class AuthCredentials {
     private String username;

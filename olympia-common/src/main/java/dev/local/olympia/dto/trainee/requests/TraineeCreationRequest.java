@@ -1,33 +1,24 @@
-package dev.local.olympia.dto.trainee;
+package dev.local.olympia.dto.trainee.requests;
 
 import java.time.LocalDate;
 
-public class TraineeUpdateRequest {
-
-    private String id;
+public class TraineeCreationRequest {
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
     private String address;
-    private Boolean isActive;
 
-    public TraineeUpdateRequest() {
+    public TraineeCreationRequest() {
     }
 
-    public TraineeUpdateRequest(String id, String firstName, String lastName, LocalDate dateOfBirth, String address, Boolean isActive) {
-        this.id = id;
+    public TraineeCreationRequest(String firstName, String lastName, LocalDate dateOfBirth, String address) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
         this.address = address;
-        this.isActive = isActive;
     }
 
     // Getters
-    public String getId() {
-        return id;
-    }
-
     public String getFirstName() {
         return firstName;
     }
@@ -44,15 +35,7 @@ public class TraineeUpdateRequest {
         return address;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
     // Setters
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
@@ -67,9 +50,5 @@ public class TraineeUpdateRequest {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public void setIsActive(Boolean active) {
-        isActive = active;
     }
 }

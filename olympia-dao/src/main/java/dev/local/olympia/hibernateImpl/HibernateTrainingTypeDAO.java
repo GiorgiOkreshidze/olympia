@@ -3,8 +3,12 @@ package dev.local.olympia.hibernateImpl;
 import dev.local.olympia.domain.TrainingType;
 import dev.local.olympia.interfaces.TrainingTypeDAO;
 import org.hibernate.Session;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
+@Primary
 @Repository
 public class HibernateTrainingTypeDAO extends AbstractHibernateDAO<TrainingType, String> implements TrainingTypeDAO {
 
@@ -26,6 +30,12 @@ public class HibernateTrainingTypeDAO extends AbstractHibernateDAO<TrainingType,
         return session.createQuery("FROM TrainingType WHERE trainingTypeName = :name", TrainingType.class)
                 .setParameter("name", name)
                 .uniqueResult();
+    }
+
+    @Override
+    public List<TrainingType> findAll() {
+        Session session = getCurrentSession();
+        return session.createQuery("FROM TrainingType", TrainingType.class).list();
     }
 
     @Override

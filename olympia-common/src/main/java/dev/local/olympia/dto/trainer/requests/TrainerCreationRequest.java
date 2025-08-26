@@ -1,4 +1,4 @@
-package dev.local.olympia.dto.trainer;
+package dev.local.olympia.dto.trainer.requests;
 
 public class TrainerCreationRequest {
     private String firstName;
