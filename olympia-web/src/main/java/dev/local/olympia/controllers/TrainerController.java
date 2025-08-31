@@ -7,6 +7,7 @@ import dev.local.olympia.dto.trainer.requests.TrainerUpdateRequest;
 import dev.local.olympia.dto.trainer.responses.TrainerProfileResponse;
 import dev.local.olympia.dto.training.requests.TrainerTrainingRequest;
 import dev.local.olympia.dto.training.responses.TrainingResponse;
+import dev.local.olympia.metrics.CustomMetrics;
 import dev.local.olympia.service.interfaces.TrainerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,15 +17,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/trainers")
 public class TrainerController {
+    private final CustomMetrics metrics;
     private final TrainerService trainerService;
 
-    public TrainerController(TrainerService trainerService) {
+    public TrainerController(TrainerService trainerService, CustomMetrics metrics) {
+        this.metrics = metrics;
         this.trainerService = trainerService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthCredentials> registerTrainer(@RequestBody TrainerCreationRequest request) {
         AuthCredentials response = trainerService.createTrainer(request);
+        metrics.trainerCreated();
         return ResponseEntity.ok(response);
     }
 

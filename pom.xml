@@ -25,7 +25,8 @@
         <jakarta.el.version>4.0.2</jakarta.el.version>
         <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
-        <spring.boot.version>4.0.0-M1</spring.boot.version>
+        <spring.boot.version>3.5.5</spring.boot.version>
+        <micrometer.version>1.15.3</micrometer.version>
     </properties>
 
 
@@ -155,6 +156,21 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <version>${spring.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>${spring.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-actuator</artifactId>
+                <version>${spring.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>${micrometer.version}</version>
             </dependency>
 
         </dependencies>
