@@ -3,6 +3,7 @@ package dev.local.olympia.controllers;
 import dev.local.olympia.dto.auth.AuthCredentials;
 import dev.local.olympia.dto.auth.PasswordChangeRequest;
 import dev.local.olympia.service.interfaces.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthCredentials authCredentials) {
+    public ResponseEntity<String> login(@Valid @RequestBody AuthCredentials authCredentials) {
         boolean isAuthenticated = authService.authenticateUser(authCredentials);
 
         if (isAuthenticated) {
@@ -29,7 +30,7 @@ public class AuthController {
     }
 
     @PutMapping("/login")
-    public ResponseEntity<String> updateLogin(@RequestBody PasswordChangeRequest request) {
+    public ResponseEntity<String> updateLogin(@Valid @RequestBody PasswordChangeRequest request) {
         boolean isChanged = authService.changePassword(request);
 
         if (isChanged) {

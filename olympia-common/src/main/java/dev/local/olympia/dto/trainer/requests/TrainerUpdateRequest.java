@@ -1,11 +1,18 @@
 package dev.local.olympia.dto.trainer.requests;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class TrainerUpdateRequest {
+    @NotBlank(message = "Username is required")
     private String username;
+    @NotBlank(message = "First name is required")
     private String firstName;
+    @NotBlank(message = "Last name is required")
     private String lastName;
     private String specialization;
-    private Boolean isActive; // Use Boolean to allow null (no change) or true/false
+    @NotNull(message = "isActive status is required")
+    private Boolean isActive;
 
     public TrainerUpdateRequest() {
     }

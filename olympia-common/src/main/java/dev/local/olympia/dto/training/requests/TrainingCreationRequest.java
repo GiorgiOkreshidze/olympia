@@ -1,14 +1,23 @@
 package dev.local.olympia.dto.training.requests;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.Duration;
 import java.time.LocalDate;
 
 public class TrainingCreationRequest {
+    @NotBlank(message = "Trainee username is required")
     private String traineeUsername;
+    @NotBlank(message = "Trainer username is required")
     private String trainerUsername;
+    @NotBlank(message = "Training name is required")
     private String trainingName;
+    @NotBlank(message = "Training type is required")
     private String trainingType;
+    @NotNull(message = "Training date is required")
     private LocalDate trainingDate;
+    @NotNull(message = "Training duration is required")
     private Duration trainingDuration;
 
     public TrainingCreationRequest() {
