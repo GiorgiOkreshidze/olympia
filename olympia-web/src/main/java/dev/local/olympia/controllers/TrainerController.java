@@ -9,6 +9,7 @@ import dev.local.olympia.dto.training.requests.TrainerTrainingRequest;
 import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.metrics.CustomMetrics;
 import dev.local.olympia.service.interfaces.TrainerService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class TrainerController {
     }
 
     @GetMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TrainerProfileResponse> getTrainer(@PathVariable("username") String username){
         if (trainerService.selectTrainerByUsername(username).isPresent()) {
             TrainerProfileResponse trainerProfile = trainerService.selectTrainerByUsername(username).get();
@@ -42,6 +44,7 @@ public class TrainerController {
     }
 
     @GetMapping({"/{username}/trainings"})
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainingResponse>> getTrainerTrainings(
             @PathVariable("username") String username,
             @RequestBody TrainerTrainingRequest request) {
@@ -50,12 +53,14 @@ public class TrainerController {
     }
 
     @PutMapping()
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TrainerProfileResponse> updateTrainer(@RequestBody TrainerUpdateRequest request) {
         TrainerProfileResponse trainerProfile = trainerService.updateTrainer(request);
         return ResponseEntity.ok(trainerProfile);
     }
 
     @PatchMapping("/{username}/{active}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> activateTrainer(@PathVariable("username") String username, @PathVariable("active") boolean isActive) {
         trainerService.activateDeactivateTrainer(username, isActive);
         return ResponseEntity.ok().build();
