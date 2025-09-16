@@ -1,21 +1,33 @@
-package dev.local.olympia.dto.trainee;
+package dev.local.olympia.dto.trainee.requests;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
 public class TraineeUpdateRequest {
-
-    private String id;
+    @NotBlank(message = "Username is required")
+    private String username;
+    @NotBlank(message = "First name is required")
     private String firstName;
+    @NotBlank(message = "Last name is required")
     private String lastName;
     private LocalDate dateOfBirth;
     private String address;
+    @NotNull(message = "isActive status is required")
     private Boolean isActive;
 
     public TraineeUpdateRequest() {
     }
 
-    public TraineeUpdateRequest(String id, String firstName, String lastName, LocalDate dateOfBirth, String address, Boolean isActive) {
-        this.id = id;
+    public TraineeUpdateRequest(
+            String username,
+            String firstName,
+            String lastName,
+            LocalDate dateOfBirth,
+            String address,
+            Boolean isActive) {
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
@@ -24,8 +36,8 @@ public class TraineeUpdateRequest {
     }
 
     // Getters
-    public String getId() {
-        return id;
+    public String getUsername() {
+        return username;
     }
 
     public String getFirstName() {
@@ -49,8 +61,8 @@ public class TraineeUpdateRequest {
     }
 
     // Setters
-    public void setId(String id) {
-        this.id = id;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setFirstName(String firstName) {

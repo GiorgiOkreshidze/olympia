@@ -3,9 +3,12 @@ package dev.local.olympia.service.impl;
 import dev.local.olympia.domain.Trainer;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.domain.User;
-import dev.local.olympia.dto.AuthCredentials;
-import dev.local.olympia.dto.trainer.TrainerCreationRequest;
-import dev.local.olympia.dto.trainer.TrainerUpdateRequest;
+import dev.local.olympia.dto.auth.AuthCredentials;
+import dev.local.olympia.dto.trainer.requests.TrainerCreationRequest;
+import dev.local.olympia.dto.trainer.requests.TrainerUpdateRequest;
+import dev.local.olympia.dto.trainer.responses.TrainerProfileResponse;
+import dev.local.olympia.dto.trainer.responses.TrainerResponse;
+import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.exception.ResourceNotFoundException;
 import dev.local.olympia.interfaces.TrainerDAO;
 import dev.local.olympia.interfaces.TrainingTypeDAO;
@@ -16,6 +19,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,17 +33,19 @@ public class TrainerManager implements TrainerService {
 
     private final TrainerDAO trainerDAO;
     private final TrainingTypeDAO trainingTypeDAO;
+    private final PasswordEncoder passwordEncoder;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
     @Autowired
     public TrainerManager(
             TrainerDAO trainerDAO,
-            TrainingTypeDAO trainingTypeDAO,
+            TrainingTypeDAO trainingTypeDAO, PasswordEncoder passwordEncoder,
             UsernameGenerator usernameGenerator,
             PasswordGenerator passwordGenerator
     ) {
         this.trainerDAO = trainerDAO;
+        this.passwordEncoder = passwordEncoder;
         logger.info("TrainerManager initialized with TrainerDAO.");
         this.trainingTypeDAO = trainingTypeDAO;
         logger.info("TrainerManager initialized with TrainingTypeDAO.");
@@ -52,11 +58,12 @@ public class TrainerManager implements TrainerService {
 
     @Override
     @Transactional
-    public Trainer createTrainer(TrainerCreationRequest request) {
+    public AuthCredentials createTrainer(TrainerCreationRequest request) {
         logger.info("Attempting to create new trainer: {} {}", request.getFirstName(), request.getLastName());
 
         String uniqueUsername = generateUniqueUsername(request.getFirstName(), request.getLastName());
         String randomPassword = passwordGenerator.generateRandomPassword(PASSWORD_LENGTH);
+        String hashedPassword = passwordEncoder.encode(randomPassword);
 
         var trainingType = trainingTypeDAO.findByName(request.getSpecialization());
 
@@ -69,7 +76,7 @@ public class TrainerManager implements TrainerService {
                 request.getFirstName(),
                 request.getLastName(),
                 uniqueUsername,
-                randomPassword,
+                hashedPassword,
                 trainingType
         );
 
@@ -79,20 +86,19 @@ public class TrainerManager implements TrainerService {
                 savedTrainer.getUser().getId(),
                 savedTrainer.getUser().getUsername()
         );
-        return savedTrainer;
+
+        return new AuthCredentials(savedTrainer.getUser().getUsername(), randomPassword);
     }
 
     @Override
     @Transactional
-    public Trainer updateTrainer(TrainerUpdateRequest request, AuthCredentials credentials) {
-        authUser(credentials);
+    public TrainerProfileResponse updateTrainer(TrainerUpdateRequest request) {
+        logger.info("Attempting to update trainer with ID: {}", request.getUsername());
 
-        logger.info("Attempting to update trainer with ID: {}", request.getId());
-
-        Trainer existingTrainer = trainerDAO.findById(request.getId())
+        Trainer existingTrainer = trainerDAO.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
-                    logger.warn("Trainer with ID {} not found for update.", request.getId());
-                    return new ResourceNotFoundException("Trainer with ID " + request.getId() + " not found.");
+                    logger.warn("Trainer with Username {} not found for update.", request.getUsername());
+                    return new ResourceNotFoundException("Trainer with Username " + request.getUsername() + " not found.");
                 });
 
         var trainingType = trainingTypeDAO.findByName(request.getSpecialization());
@@ -111,21 +117,18 @@ public class TrainerManager implements TrainerService {
         if (request.getIsActive() != null) {
             user.setActive(request.getIsActive());
         }
-
         if (request.getSpecialization() != null) {
             existingTrainer.setSpecialization(trainingType);
         }
 
         Trainer updatedTrainer = trainerDAO.save(existingTrainer);
         logger.info("Successfully updated trainer with ID: {}", updatedTrainer.getUser().getId());
-        return updatedTrainer;
+        return new TrainerProfileResponse(updatedTrainer);
     }
 
     @Override
     @Transactional
-    public Trainer updateTrainerPassword(String id, String newPassword, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Trainer updateTrainerPassword(String id, String newPassword) {
         logger.info("Attempting to update password for trainer with ID: {}", id);
 
         Trainer existingTrainer = trainerDAO.findById(id)
@@ -142,9 +145,7 @@ public class TrainerManager implements TrainerService {
 
     @Override
     @Transactional
-    public Trainer activateDeactivateTrainer(String username, boolean isActive, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Trainer activateDeactivateTrainer(String username, boolean isActive) {
         logger.info("Attempting to {} trainer with username: {}", isActive ? "activate" : "deactivate", username);
 
         Trainer existingTrainer = trainerDAO.findByUsername(username)
@@ -189,9 +190,7 @@ public class TrainerManager implements TrainerService {
 
     @Override
     @Transactional
-    public List<Training> getTrainerTrainingsList(String username, LocalDate fromDate, LocalDate toDate, String traineeName, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<TrainingResponse> getTrainerTrainingsList(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
         logger.debug("Retrieving trainings for trainer: {} from {} to {}", username, fromDate, toDate);
 
         Trainer trainer = trainerDAO.findByUsername(username)
@@ -200,50 +199,43 @@ public class TrainerManager implements TrainerService {
                     return new ResourceNotFoundException("Trainer with username " + username + " not found.");
                 });
 
-        return trainerDAO.findTrainingsByTrainer(trainer, fromDate, toDate, traineeName);
+        var trainings = trainerDAO.findTrainingsByTrainer(trainer, fromDate, toDate, traineeName);
+
+        return trainings.stream().map(TrainingResponse::new).toList();
     }
 
     @Override
     @Transactional
-    public List<Trainer> findUnassignedTrainers(String traineeUsername, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<TrainerResponse> findUnassignedTrainers(String traineeUsername) {
         logger.debug("Finding unassigned trainers for trainee: {}", traineeUsername);
-        return trainerDAO.findUnassignedTrainers(traineeUsername);
+        List<Trainer> unassignedTrainers = trainerDAO.findUnassignedTrainers(traineeUsername);
+        return unassignedTrainers.stream().map(TrainerResponse::new).toList();
     }
 
     @Override
     @Transactional
-    public Optional<Trainer> selectTrainerById(String id, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Optional<Trainer> selectTrainerById(String id) {
         logger.debug("Selecting trainer by ID: {}", id);
         return trainerDAO.findById(id);
     }
 
     @Override
     @Transactional
-    public List<Trainer> selectAllTrainers(AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<Trainer> selectAllTrainers() {
         logger.debug("Selecting all trainers.");
         return trainerDAO.findAll();
     }
 
     @Override
     @Transactional
-    public Optional<Trainer> selectTrainerByUsername(String username, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Optional<TrainerProfileResponse> selectTrainerByUsername(String username) {
         logger.debug("Selecting trainer by username: {}", username);
-        return trainerDAO.findByUsername(username);
+        return trainerDAO.findByUsername(username).map(TrainerProfileResponse::new);
     }
 
     private String generateUniqueUsername(String firstName, String lastName){
         String baseUsername = usernameGenerator.generateBaseUsername(firstName, lastName);
-        UsernameGenerator.UsernameExistsChecker checker = username ->
-                trainerDAO.findByUsername(username).isPresent();
-        return usernameGenerator.generateUniqueUsername(baseUsername, checker);
+        return usernameGenerator.generateUniqueUsername(baseUsername);
     }
 
     private void authUser(AuthCredentials credentials) {

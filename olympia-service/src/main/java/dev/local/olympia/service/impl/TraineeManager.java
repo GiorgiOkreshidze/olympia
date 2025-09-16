@@ -4,9 +4,12 @@ import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.domain.Trainer;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.domain.User;
-import dev.local.olympia.dto.AuthCredentials;
-import dev.local.olympia.dto.trainee.TraineeCreationRequest;
-import dev.local.olympia.dto.trainee.TraineeUpdateRequest;
+import dev.local.olympia.dto.auth.AuthCredentials;
+import dev.local.olympia.dto.trainee.requests.TraineeCreationRequest;
+import dev.local.olympia.dto.trainee.requests.TraineeUpdateRequest;
+import dev.local.olympia.dto.trainee.responses.TraineeProfileResponse;
+import dev.local.olympia.dto.trainer.responses.TrainerResponse;
+import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.exception.ResourceNotFoundException;
 import dev.local.olympia.interfaces.TraineeDAO;
 import dev.local.olympia.interfaces.TrainerDAO;
@@ -18,6 +21,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,6 +39,8 @@ public class TraineeManager implements TraineeService {
     private final TrainingDAO trainingDAO;
     private final TrainerDAO trainerDAO;
 
+    private final PasswordEncoder passwordEncoder;
+
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
@@ -42,11 +48,12 @@ public class TraineeManager implements TraineeService {
     public TraineeManager(
             TraineeDAO traineeDAO,
             TrainingDAO trainingDAO,
-            TrainerDAO trainerDAO,
+            TrainerDAO trainerDAO, PasswordEncoder passwordEncoder,
             UsernameGenerator usernameGenerator,
             PasswordGenerator passwordGenerator
     ) {
         this.traineeDAO = traineeDAO;
+        this.passwordEncoder = passwordEncoder;
         logger.info("TraineeManager initialized with TraineeDAO.");
         this.trainingDAO = trainingDAO;
         logger.info("TraineeManager initialized with TrainingDAO.");
@@ -60,7 +67,7 @@ public class TraineeManager implements TraineeService {
 
     @Override
     @Transactional
-    public Trainee createTrainee(TraineeCreationRequest request) {
+    public AuthCredentials createTrainee(TraineeCreationRequest request) {
         logger.info("Attempting to create new trainee: {} {}",
                 request.getFirstName(), request.getLastName()
         );
@@ -71,11 +78,13 @@ public class TraineeManager implements TraineeService {
         );
         String randomPassword = passwordGenerator.generateRandomPassword(PASSWORD_LENGTH);
 
+        String hashedPassword = passwordEncoder.encode(randomPassword);
+
         Trainee newTrainee = new Trainee(
                 request.getFirstName(),
                 request.getLastName(),
                 uniqueUsername,
-                randomPassword,
+                hashedPassword,
                 request.getDateOfBirth(),
                 request.getAddress()
         );
@@ -86,20 +95,22 @@ public class TraineeManager implements TraineeService {
                 savedTrainee.getUser().getId(),
                 savedTrainee.getUser().getUsername()
         );
-        return savedTrainee;
+
+        return new AuthCredentials(
+                savedTrainee.getUser().getUsername(),
+                randomPassword
+        );
     }
 
     @Override
     @Transactional
-    public Trainee updateTrainee(TraineeUpdateRequest request, AuthCredentials credentials) {
-        authUser(credentials);
+    public TraineeProfileResponse updateTrainee(TraineeUpdateRequest request) {
+        logger.info("Attempting to update trainee with ID: {}", request.getUsername());
 
-        logger.info("Attempting to update trainee with ID: {}", request.getId());
-
-        Trainee existingTrainee = traineeDAO.findById(request.getId())
+        Trainee existingTrainee = traineeDAO.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
-                    logger.warn("Trainee with ID {} not found for update.", request.getId());
-                    return new ResourceNotFoundException("Trainee with ID " + request.getId() + " not found.");
+                    logger.warn("Trainee with Username {} not found for update.", request.getUsername());
+                    return new ResourceNotFoundException("Trainee with Username " + request.getUsername() + " not found.");
                 });
 
         User user = existingTrainee.getUser();
@@ -125,14 +136,12 @@ public class TraineeManager implements TraineeService {
 
         Trainee updatedTrainee = traineeDAO.save(existingTrainee);
         logger.info("Successfully updated trainee with ID: {}", updatedTrainee.getUser().getId());
-        return updatedTrainee;
+        return new TraineeProfileResponse(updatedTrainee);
     }
 
     @Override
     @Transactional
-    public Trainee updateTraineePassword(String id, String newPassword, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Trainee updateTraineePassword(String id, String newPassword) {
         logger.info("Attempting to update trainee password with ID: {}", id);
         Trainee existingTrainee = traineeDAO.findById(id)
                 .orElseThrow(() -> {
@@ -148,9 +157,7 @@ public class TraineeManager implements TraineeService {
 
     @Override
     @Transactional
-    public Trainee activateDeactivateTrainee(String username, boolean isActive, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Trainee activateDeactivateTrainee(String username, boolean isActive) {
         logger.info("Attempting to {} trainee with username: {}", isActive ? "activate" : "deactivate", username);
         Trainee existingTrainee = traineeDAO.findByUsername(username)
                 .orElseThrow(() -> {
@@ -168,9 +175,7 @@ public class TraineeManager implements TraineeService {
 
     @Override
     @Transactional
-    public void updateTraineeTrainers(String traineeUsername, List<String> trainerUsernames, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<TrainerResponse> updateTraineeTrainers(String traineeUsername, List<String> trainerUsernames) {
         logger.info("Attempting to update trainers for trainee: {}", traineeUsername);
 
         Optional<Trainee> traineeOptional = traineeDAO.findByUsername(traineeUsername);
@@ -189,11 +194,16 @@ public class TraineeManager implements TraineeService {
             currentTrainers.clear();
             currentTrainers.addAll(newTrainers);
 
-            traineeDAO.save(trainee);
+            Trainee updatedTrainee = traineeDAO.save(trainee);
 
             logger.info("Successfully updated trainers for trainee: {}", traineeUsername);
+
+            return updatedTrainee.getTrainers().stream()
+                    .map(TrainerResponse::new)
+                    .collect(Collectors.toList());
         } else {
             logger.warn("Trainee with username {} not found. Update failed.", traineeUsername);
+            throw new ResourceNotFoundException("Trainee with username " + traineeUsername + " not found.");
         }
     }
 
@@ -222,9 +232,7 @@ public class TraineeManager implements TraineeService {
 
     @Override
     @Transactional
-    public void deleteTrainee(String username, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public void deleteTrainee(String username) {
         logger.info("Attempting to delete trainee with username: {}", username);
 
         var trainee = traineeDAO.findByUsername(username)
@@ -239,9 +247,12 @@ public class TraineeManager implements TraineeService {
 
     @Override
     @Transactional
-    public List<Training> getTraineeTrainingsList(String username, LocalDate fromDate, LocalDate toDate, String trainerName, String trainingType, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<TrainingResponse> getTraineeTrainingsList(
+            String username,
+            LocalDate fromDate,
+            LocalDate toDate,
+            String trainerName,
+            String trainingType) {
         logger.info("Retrieving trainings for trainee with username: {} from {} to {} by trainer: {} of type: {}",
                 username, fromDate, toDate, trainerName, trainingType);
 
@@ -253,41 +264,37 @@ public class TraineeManager implements TraineeService {
 
         List<Training> trainings = trainingDAO.findTrainingsByTrainee(traineeOpt.get(), fromDate, toDate, trainerName, trainingType);
         logger.info("Found {} trainings for trainee with username: {}", trainings.size(), username);
-        return trainings;
+
+        return trainings.stream()
+                .map(TrainingResponse::new)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public Optional<Trainee> selectTraineeById(String id, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Optional<Trainee> selectTraineeById(String id) {
         logger.debug("Selecting trainee by ID: {}", id);
         return traineeDAO.findById(id);
     }
 
     @Override
     @Transactional
-    public List<Trainee> selectAllTrainees(AuthCredentials credentials) {
-        authUser(credentials);
-
+    public List<Trainee> selectAllTrainees() {
         logger.debug("Selecting all trainees.");
         return traineeDAO.findAll();
     }
 
     @Override
     @Transactional
-    public Optional<Trainee> selectTraineeByUsername(String username, AuthCredentials credentials) {
-        authUser(credentials);
-
+    public Optional<TraineeProfileResponse> selectTraineeByUsername(String username) {
         logger.debug("Selecting trainee by username: {}", username);
-        return traineeDAO.findByUsername(username);
+        return traineeDAO.findByUsername(username)
+                .map(TraineeProfileResponse::new);
     }
 
     private String generateUniqueUsername(String firstName, String lastName){
         String baseUsername = usernameGenerator.generateBaseUsername(firstName, lastName);
-        UsernameGenerator.UsernameExistsChecker checker = username ->
-                traineeDAO.findByUsername(username).isPresent();
-        return usernameGenerator.generateUniqueUsername(baseUsername, checker);
+        return usernameGenerator.generateUniqueUsername(baseUsername);
     }
 
     private void authUser(AuthCredentials credentials) {

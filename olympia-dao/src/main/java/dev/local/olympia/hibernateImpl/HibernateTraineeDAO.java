@@ -4,11 +4,13 @@ import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.interfaces.TraineeDAO;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Primary
 @Repository("hibernateTraineeDAO")
 public class HibernateTraineeDAO extends AbstractHibernateDAO<Trainee, String> implements TraineeDAO {
 
@@ -27,7 +29,7 @@ public class HibernateTraineeDAO extends AbstractHibernateDAO<Trainee, String> i
     public Optional<Trainee> findByUsername(String username) {
         Session session = getCurrentSession();
         try {
-            Trainee trainee = session.createQuery("FROM Trainee t JOIN FETCH t.user u WHERE u.username = :username", Trainee.class)
+            Trainee trainee = session.createQuery("FROM Trainee t JOIN FETCH t.user u LEFT JOIN FETCH t.trainers tr WHERE u.username = :username", Trainee.class)
                     .setParameter("username", username)
                     .uniqueResult();
             return Optional.ofNullable(trainee);

@@ -1,9 +1,13 @@
-package dev.local.olympia.dto.trainee;
+package dev.local.olympia.dto.trainee.requests;
+
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 
 public class TraineeCreationRequest {
+    @NotBlank(message = "First name is required")
     private String firstName;
+    @NotBlank(message = "Last name is required")
     private String lastName;
     private LocalDate dateOfBirth;
     private String address;

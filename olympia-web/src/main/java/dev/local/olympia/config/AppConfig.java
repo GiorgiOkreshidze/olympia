@@ -3,7 +3,10 @@ package dev.local.olympia.config;
 import dev.local.olympia.interfaces.TraineeDAO;
 import dev.local.olympia.interfaces.TrainerDAO;
 import dev.local.olympia.util.UsernameGenerator;
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.*;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @ComponentScan(basePackages = {
@@ -14,11 +17,4 @@ import org.springframework.context.annotation.*;
 @PropertySource("classpath:application.properties")
 @Import(HibernateConfig.class)
 public class AppConfig {
-
-    @Bean
-    public UsernameGenerator.UsernameExistsChecker usernameExistsChecker(TraineeDAO traineeDAO, TrainerDAO trainerDAO) {
-        return username ->
-                traineeDAO.findByUsername(username).isPresent() ||
-                        trainerDAO.findByUsername(username).isPresent();
-    }
 }
