@@ -1,6 +1,7 @@
 package dev.local.olympia.impl;
 
 import dev.local.olympia.domain.Trainer;
+import dev.local.olympia.domain.Training;
 import dev.local.olympia.interfaces.MapStorage;
 import dev.local.olympia.interfaces.TrainerDAO;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +29,9 @@ public class InMemoryTrainerDAO implements TrainerDAO {
 
     @Override
     public Trainer save(Trainer trainer) {
-        checkId(trainer.getId());
-        logger.debug("Saving trainer with ID: {}", trainer.getId());
-        return mapStorage.save(Trainer.class, trainer.getId(), trainer);
+        checkId(trainer.getUser().getId());
+        logger.debug("Saving trainer with ID: {}", trainer.getUser().getId());
+        return mapStorage.save(Trainer.class, trainer.getUser().getId(), trainer);
     }
 
     @Override
@@ -56,7 +58,7 @@ public class InMemoryTrainerDAO implements TrainerDAO {
     public Optional<Trainer> findByUsername(String username) {
         logger.debug("Finding trainer by username: {}", username);
         return getTrainerStorage().values().stream()
-                .filter(t -> t.getUsername() != null && t.getUsername().equals(username))
+                .filter(t -> t.getUser().getUsername() != null && t.getUser().getUsername().equals(username))
                 .findFirst();
     }
 
@@ -64,9 +66,19 @@ public class InMemoryTrainerDAO implements TrainerDAO {
     public List<Trainer> findByFirstNameAndLastName(String firstName, String lastName) {
         logger.debug("Finding trainers by first name '{}' and last name '{}'.", firstName, lastName);
         return getTrainerStorage().values().stream()
-                .filter(t -> t.getFirstName() != null && t.getFirstName().equalsIgnoreCase(firstName) &&
-                        t.getLastName() != null && t.getLastName().equalsIgnoreCase(lastName))
+                .filter(t -> t.getUser().getFirstName() != null && t.getUser().getFirstName().equalsIgnoreCase(firstName) &&
+                        t.getUser().getLastName() != null && t.getUser().getLastName().equalsIgnoreCase(lastName))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Training> findTrainingsByTrainer(Trainer trainer, LocalDate fromDate, LocalDate toDate, String traineeName) {
+        return List.of();
+    }
+
+    @Override
+    public List<Trainer> findUnassignedTrainers(String traineeUsername) {
+        return List.of();
     }
 
     private Map<String, Trainer> getTrainerStorage() {

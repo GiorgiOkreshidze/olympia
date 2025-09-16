@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryTraineeDAO implements TraineeDAO {
@@ -27,9 +26,9 @@ public class InMemoryTraineeDAO implements TraineeDAO {
 
     @Override
     public Trainee save(Trainee trainee) {
-        checkId(trainee.getId());
-        logger.debug("Saving trainee with ID: {}", trainee.getId());
-        return mapStorage.save(Trainee.class, trainee.getId(), trainee);
+        checkId(trainee.getUser().getId());
+        logger.debug("Saving trainee with ID: {}", trainee.getUser().getId());
+        return mapStorage.save(Trainee.class, trainee.getUser().getId(), trainee);
     }
 
     @Override
@@ -46,10 +45,9 @@ public class InMemoryTraineeDAO implements TraineeDAO {
     }
 
     @Override
-    public void delete(String id) {
-        checkId(id);
-        logger.debug("Deleting trainee with ID: {}", id);
-        mapStorage.delete(Trainee.class, id);
+    public void delete(Trainee trainee) {
+        logger.debug("Deleting trainee with ID: {}", trainee);
+        mapStorage.delete(Trainee.class, trainee.getUser().getId());
     }
 
     @Override
@@ -62,17 +60,8 @@ public class InMemoryTraineeDAO implements TraineeDAO {
     public Optional<Trainee> findByUsername(String username) {
         logger.debug("Finding trainee by username: {}", username);
         return getTraineeStorage().values().stream()
-                .filter(t -> t.getUsername() != null && t.getUsername().equals(username))
+                .filter(t -> t.getUser().getUsername() != null && t.getUser().getUsername().equals(username))
                 .findFirst();
-    }
-
-    @Override
-    public List<Trainee> findByFirstNameAndLastName(String firstName, String lastName) {
-        logger.debug("Finding trainees by first name '{}' and last name '{}'.", firstName, lastName);
-        return getTraineeStorage().values().stream()
-                .filter(t -> t.getFirstName() != null && t.getFirstName().equalsIgnoreCase(firstName) &&
-                        t.getLastName() != null && t.getLastName().equalsIgnoreCase(lastName))
-                .collect(Collectors.toList());
     }
 
     private Map<String, Trainee> getTraineeStorage() {

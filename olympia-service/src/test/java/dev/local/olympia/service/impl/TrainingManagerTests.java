@@ -1,12 +1,15 @@
 package dev.local.olympia.service.impl;
 
+import dev.local.olympia.domain.Trainee;
+import dev.local.olympia.domain.Trainer;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.domain.TrainingType;
-import dev.local.olympia.dto.training.TrainingCreationRequest;
+import dev.local.olympia.dto.training.requests.TrainingCreationRequest;
 import dev.local.olympia.exception.ResourceNotFoundException;
 import dev.local.olympia.interfaces.TraineeDAO;
 import dev.local.olympia.interfaces.TrainerDAO;
 import dev.local.olympia.interfaces.TrainingDAO;
+import dev.local.olympia.interfaces.TrainingTypeDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,91 +30,118 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TrainingManagerTests {
-
     @Mock
     private TrainingDAO trainingDAO;
     @Mock
     private TraineeDAO traineeDAO;
     @Mock
     private TrainerDAO trainerDAO;
+    @Mock
+    private TrainingTypeDAO trainingTypeDAO;
 
     @InjectMocks
     private TrainingManager trainingManager;
 
+    private Trainee trainee;
+    private Trainer trainer;
+    private TrainingType trainingType;
     private TrainingCreationRequest creationRequest;
     private Training sampleTraining;
-    private String validTraineeId;
-    private String validTrainerId;
 
     @BeforeEach
     void setUp() {
-        validTraineeId = UUID.randomUUID().toString();
-        validTrainerId = UUID.randomUUID().toString();
+        trainee = new Trainee(
+                "firstNameTrainee",
+                "lastNameTrainee",
+                "firstNameTrainee.lastNameTrainee",
+                "passwordTrainee",
+                LocalDate.of(1990, 1, 1),
+                "addressTrainee"
+        );
+        trainee.getUser().setId(UUID.randomUUID().toString());
+
+        trainingType = new TrainingType("Yoga");
+
+        trainer = new Trainer(
+                "firstNameTrainer",
+                "lastNameTrainer",
+                "firstNameTrainer.lastNameTrainer",
+                "passwordTrainer",
+                trainingType
+        );
 
         creationRequest = new TrainingCreationRequest(
-                validTraineeId,
-                validTrainerId,
+                trainee.getUser().getUsername(),
+                trainer.getUser().getUsername(),
                 "Morning Cardio",
-                TrainingType.SPEED,
+                trainingType.getTrainingTypeName(),
                 LocalDate.of(2025, 8, 1),
                 Duration.ofMinutes(60)
         );
-        sampleTraining = new Training( validTraineeId, validTrainerId, "Evening Yoga",
-                TrainingType.FLEXIBILITY, LocalDate.of(2025, 8, 2), Duration.ofHours(1)
+
+        sampleTraining = new Training(
+                trainee,
+                trainer,
+                "Sample Training",
+                trainingType,
+                LocalDate.of(2025, 8, 1),
+                Duration.ofMinutes(60)
         );
     }
 
     @Test
     @DisplayName("Should successfully create a new training session")
     void createTraining_Success() {
-        when(traineeDAO.existsById(validTraineeId)).thenReturn(true);
-        when(trainerDAO.existsById(validTrainerId)).thenReturn(true);
+        when(traineeDAO.findByUsername(trainee.getUser().getUsername())).thenReturn(Optional.of(trainee));
+        when(trainerDAO.findByUsername(trainer.getUser().getUsername())).thenReturn(Optional.of(trainer));
         when(trainingDAO.save(any(Training.class))).thenAnswer(invocation -> {
-            return invocation.<Training>getArgument(0);
+            Training training = invocation.getArgument(0);
+            training.setId(UUID.randomUUID().toString());
+            return training;
         });
+        when(trainingTypeDAO.findByName(trainingType.getTrainingTypeName())).thenReturn(trainingType);
 
         Training createdTraining = trainingManager.createTraining(creationRequest);
 
         assertNotNull(createdTraining);
         assertNotNull(createdTraining.getId());
         assertEquals("Morning Cardio", createdTraining.getTrainingName());
-        assertEquals(TrainingType.SPEED, createdTraining.getTrainingType());
-        assertEquals(validTraineeId, createdTraining.getTraineeId());
-        assertEquals(validTrainerId, createdTraining.getTrainerId());
+        assertEquals(trainingType, createdTraining.getTrainingType());
+        assertEquals(trainee, createdTraining.getTrainee());
+        assertEquals(trainer, createdTraining.getTrainer());
 
-        verify(traineeDAO, times(1)).existsById(validTraineeId);
-        verify(trainerDAO, times(1)).existsById(validTrainerId);
+        verify(traineeDAO, times(2)).findByUsername(trainee.getUser().getUsername());
+        verify(trainerDAO, times(2)).findByUsername(trainer.getUser().getUsername());
         verify(trainingDAO, times(1)).save(any(Training.class));
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException if trainee not found during training creation")
     void createTraining_TraineeNotFound() {
-        when(traineeDAO.existsById(validTraineeId)).thenReturn(false);
+        when(traineeDAO.findByUsername(trainee.getUser().getUsername())).thenReturn(Optional.empty());
 
         ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> {
             trainingManager.createTraining(creationRequest);
         });
 
-        assertEquals("Trainee with ID " + validTraineeId + " not found.", thrown.getMessage());
-        verify(traineeDAO, times(1)).existsById(validTraineeId);
-        verify(trainerDAO, never()).existsById(anyString());
+        assertEquals("Trainee with Username " + trainee.getUser().getUsername() + " not found.", thrown.getMessage());
+        verify(traineeDAO, times(1)).findByUsername(trainee.getUser().getUsername());
         verify(trainingDAO, never()).save(any(Training.class));
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException if trainer not found during training creation")
     void createTraining_TrainerNotFound() {
-        when(traineeDAO.existsById(validTraineeId)).thenReturn(true);
-        when(trainerDAO.existsById(validTrainerId)).thenReturn(false);
+        when(traineeDAO.findByUsername(creationRequest.getTraineeUsername())).thenReturn(Optional.of(trainee));
+        when(trainerDAO.findByUsername(creationRequest.getTrainerUsername())).thenReturn(Optional.empty());
 
         ResourceNotFoundException thrown = assertThrows(ResourceNotFoundException.class, () -> {
             trainingManager.createTraining(creationRequest);
         });
 
-        assertEquals("Trainer with ID " + validTrainerId + " not found.", thrown.getMessage());
-        verify(traineeDAO, times(1)).existsById(validTraineeId);
-        verify(trainerDAO, times(1)).existsById(validTrainerId);
+        assertEquals("Trainer with Username " + trainer.getUser().getUsername() + " not found.", thrown.getMessage());
+        verify(traineeDAO, times(1)).findByUsername(trainee.getUser().getUsername());
+        verify(trainerDAO, times(1)).findByUsername(trainer.getUser().getUsername());
         verify(trainingDAO, never()).save(any(Training.class));
     }
 

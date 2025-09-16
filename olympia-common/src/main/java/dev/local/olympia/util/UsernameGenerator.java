@@ -1,12 +1,24 @@
 package dev.local.olympia.util;
 
+import dev.local.olympia.interfaces.TraineeDAO;
+import dev.local.olympia.interfaces.TrainerDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UsernameGenerator {
     private static final Logger logger = LoggerFactory.getLogger(UsernameGenerator.class);
 
-    public static String generateBaseUsername(String firstName, String lastName) {
+    private final TraineeDAO traineeDAO;
+    private final TrainerDAO trainerDAO;
+
+    public UsernameGenerator(TraineeDAO traineeDAO, TrainerDAO trainerDAO) {
+        this.traineeDAO = traineeDAO;
+        this.trainerDAO = trainerDAO;
+    }
+
+    public String generateBaseUsername(String firstName, String lastName) {
         if (firstName == null || firstName.trim().isEmpty() || lastName == null || lastName.trim().isEmpty()) {
             logger.warn("Attempted to generate username with null or empty first/last name. Using default.");
             throw new IllegalArgumentException("First name and last name must not be null or empty.");
@@ -22,15 +34,11 @@ public class UsernameGenerator {
         return base;
     }
 
-    public static String generateUniqueUsername(String baseUsername, UsernameExistsChecker usernameExistsChecker) {
-        if(usernameExistsChecker == null) {
-            logger.error("UsernameExistsChecker cannot be null.");
-            throw new IllegalArgumentException("UsernameExistsChecker must not be null.");
-        }
+    public String generateUniqueUsername(String baseUsername) {
         String uniqueUsername = baseUsername;
         int suffix = 0;
         // Loop until a unique username is found
-        while (usernameExistsChecker.exists(uniqueUsername)) {
+        while (usernameExists(uniqueUsername)) {
             suffix++;
             uniqueUsername = baseUsername + "." + suffix;
             logger.debug("Username '{}' already exists. Trying: '{}'", baseUsername, uniqueUsername);
@@ -39,12 +47,8 @@ public class UsernameGenerator {
         return uniqueUsername;
     }
 
-    /**
-     * Functional interface to abstract the logic of checking if a username exists.
-     * This allows the generator to be decoupled from the DAO/Service layer.
-     */
-    @FunctionalInterface
-    public interface UsernameExistsChecker {
-        boolean exists(String username);
+    private boolean usernameExists(String username) {
+        return traineeDAO.findByUsername(username).isPresent() ||
+                trainerDAO.findByUsername(username).isPresent();
     }
 }

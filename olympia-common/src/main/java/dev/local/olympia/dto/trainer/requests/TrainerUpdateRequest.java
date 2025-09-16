@@ -1,17 +1,29 @@
-package dev.local.olympia.dto.trainer;
+package dev.local.olympia.dto.trainer.requests;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class TrainerUpdateRequest {
-    private String id; // ID is crucial for updates
+    @NotBlank(message = "Username is required")
+    private String username;
+    @NotBlank(message = "First name is required")
     private String firstName;
+    @NotBlank(message = "Last name is required")
     private String lastName;
     private String specialization;
-    private Boolean isActive; // Use Boolean to allow null (no change) or true/false
+    @NotNull(message = "isActive status is required")
+    private Boolean isActive;
 
     public TrainerUpdateRequest() {
     }
 
-    public TrainerUpdateRequest(String id, String firstName, String lastName,  String specialization, Boolean isActive) {
-        this.id = id;
+    public TrainerUpdateRequest(
+            String username,
+            String firstName,
+            String lastName,
+            String specialization,
+            Boolean isActive) {
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.specialization = specialization;
@@ -19,8 +31,8 @@ public class TrainerUpdateRequest {
     }
 
     // Getters
-    public String getId() {
-        return id;
+    public String getUsername() {
+        return username;
     }
 
     public String getFirstName() {
@@ -40,8 +52,8 @@ public class TrainerUpdateRequest {
     }
 
     // Setters
-    public void setId(String id) {
-        this.id = id;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setFirstName(String firstName) {

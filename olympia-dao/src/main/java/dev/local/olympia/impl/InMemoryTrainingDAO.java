@@ -1,5 +1,6 @@
 package dev.local.olympia.impl;
 
+import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.interfaces.MapStorage;
 import dev.local.olympia.interfaces.TrainingDAO;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,17 +47,8 @@ public class InMemoryTrainingDAO implements TrainingDAO {
     }
 
     @Override
-    public void delete(String id) {
-        checkId(id);
-        logger.debug("Deleting training with ID: {}", id);
-        mapStorage.delete(Training.class, id);
-    }
-
-    @Override
-    public boolean existsById(String id) {
-        checkId(id);
-        logger.debug("Checking if training with ID {} exists.", id);
-        return mapStorage.existsById(Training.class, id);
+    public List<Training> findTrainingsByTrainee(Trainee trainee, LocalDate fromDate, LocalDate toDate, String trainerName, String trainingType) {
+        return List.of();
     }
 
     private Map<String, Training> getTrainingStorage() {

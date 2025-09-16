@@ -1,28 +1,76 @@
 package dev.local.olympia.domain;
 
-public enum TrainingType {
-    STRENGTH("Strength Training"),
-    ENDURANCE("Endurance Training"),
-    FLEXIBILITY("Flexibility Training"),
-    BALANCE("Balance Training"),
-    SPEED("Speed Training"),
-    AGILITY("Agility Training"),
-    POWER("Power Training"),
-    RECOVERY("Recovery"),
-    OTHER("Other"),;
+import jakarta.persistence.*;
 
-    private final String displayName;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
-    TrainingType(String displayName) {
-        this.displayName = displayName;
+@Entity
+@Table(
+        name = "training_type",
+        uniqueConstraints = @UniqueConstraint(name = "uk_training_type_name", columnNames = "training_type_name")
+)
+public class TrainingType {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id")
+    private String id;
+
+    @Column(name = "training_type_name", nullable = false)
+    private String trainingTypeName;
+
+    @OneToMany(mappedBy = "trainingType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Training> trainings = new HashSet<>();
+
+    public TrainingType(){
+
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public TrainingType(String trainingTypeName) {
+        this.trainingTypeName = trainingTypeName;
+    }
+
+    // --- Getters ---
+    public String getId() {
+        return id;
+    }
+
+    public String getTrainingTypeName() {
+        return trainingTypeName;
+    }
+
+    public Set<Training> getTrainings() {
+        return trainings;
+    }
+
+    // --- Setters ---
+    public void setTrainingTypeName(String trainingTypeName) {
+        this.trainingTypeName = trainingTypeName;
+    }
+
+    public void setTrainings(Set<Training> trainings) {
+        this.trainings = trainings;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TrainingType that = (TrainingType) o;
+        return Objects.equals(id, that.id) && Objects.equals(trainingTypeName, that.trainingTypeName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, trainingTypeName);
     }
 
     @Override
     public String toString() {
-        return displayName;
+        return "TrainingType{" +
+                "id=" + id +
+                ", trainingTypeName='" + trainingTypeName + '\'' +
+                '}';
     }
 }
