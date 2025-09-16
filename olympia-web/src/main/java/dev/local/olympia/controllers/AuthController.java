@@ -5,8 +5,7 @@ import dev.local.olympia.Security.LoginAttemptService;
 import dev.local.olympia.dto.auth.AuthCredentials;
 import dev.local.olympia.dto.auth.PasswordChangeRequest;
 import dev.local.olympia.service.interfaces.AuthService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,14 +32,9 @@ public class AuthController {
         this.loginAttemptService = loginAttemptService;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthCredentials authCredentials) {
-        // Step 1: Check for account lock first
-        if (loginAttemptService.isBlocked(authCredentials.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Account temporarily locked due to failed attempts");
-        }
-
+    @GetMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody AuthCredentials authCredentials) {
+        boolean isAuthenticated = authService.authenticateUser(authCredentials);
         try {
             // Step 2: Delegate authentication to Spring Security
             Authentication authentication = authenticationManager.authenticate(
@@ -67,8 +61,8 @@ public class AuthController {
     }
 
     @PutMapping("/login")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<String> updateLogin(@RequestBody PasswordChangeRequest request) {
+
+    public ResponseEntity<String> updateLogin(@Valid @RequestBody PasswordChangeRequest request) {
         boolean isChanged = authService.changePassword(request);
 
         if (isChanged) {

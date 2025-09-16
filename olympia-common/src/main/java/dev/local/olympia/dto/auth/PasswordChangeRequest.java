@@ -1,8 +1,15 @@
 package dev.local.olympia.dto.auth;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class PasswordChangeRequest {
+    @NotBlank(message = "Username is required")
     String username;
+    @NotBlank(message = "Old password is required")
     String oldPassword;
+    @NotBlank(message = "New password is required")
+    @Size(min = 6, message = "New password must be at least 6 characters")
     String newPassword;
 
     public PasswordChangeRequest() {}

@@ -9,7 +9,9 @@ import dev.local.olympia.dto.training.requests.TrainerTrainingRequest;
 import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.metrics.CustomMetrics;
 import dev.local.olympia.service.interfaces.TrainerService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +29,7 @@ public class TrainerController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthCredentials> registerTrainer(@RequestBody TrainerCreationRequest request) {
+    public ResponseEntity<AuthCredentials> registerTrainer(@Valid @RequestBody TrainerCreationRequest request) {
         AuthCredentials response = trainerService.createTrainer(request);
         metrics.trainerCreated();
         return ResponseEntity.ok(response);
@@ -35,7 +37,7 @@ public class TrainerController {
 
     @GetMapping("/{username}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<TrainerProfileResponse> getTrainer(@PathVariable("username") String username){
+    public ResponseEntity<TrainerProfileResponse> getTrainer(@PathVariable("username") @NotBlank String username){
         if (trainerService.selectTrainerByUsername(username).isPresent()) {
             TrainerProfileResponse trainerProfile = trainerService.selectTrainerByUsername(username).get();
             return ResponseEntity.ok(trainerProfile);
@@ -54,14 +56,14 @@ public class TrainerController {
 
     @PutMapping()
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<TrainerProfileResponse> updateTrainer(@RequestBody TrainerUpdateRequest request) {
+    public ResponseEntity<TrainerProfileResponse> updateTrainer(@Valid @RequestBody TrainerUpdateRequest request) {
         TrainerProfileResponse trainerProfile = trainerService.updateTrainer(request);
         return ResponseEntity.ok(trainerProfile);
     }
 
     @PatchMapping("/{username}/{active}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> activateTrainer(@PathVariable("username") String username, @PathVariable("active") boolean isActive) {
+    public ResponseEntity<Void> activateTrainer(@PathVariable("username") @NotBlank String username, @PathVariable("active") @NotNull boolean isActive) {
         trainerService.activateDeactivateTrainer(username, isActive);
         return ResponseEntity.ok().build();
     }

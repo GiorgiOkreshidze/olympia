@@ -9,7 +9,9 @@ import dev.local.olympia.dto.training.requests.TraineeTrainingRequest;
 import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.service.interfaces.TraineeService;
 import dev.local.olympia.service.interfaces.TrainerService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,14 +31,14 @@ public class TraineeController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthCredentials> registerTrainee(@RequestBody TraineeCreationRequest request) {
+    public ResponseEntity<AuthCredentials> registerTrainee(@Valid @RequestBody TraineeCreationRequest request) {
         AuthCredentials response = traineeService.createTrainee(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{username}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<TraineeProfileResponse> getTrainee(@PathVariable("username") String username) {
+    public ResponseEntity<TraineeProfileResponse> getTrainee(@PathVariable("username") @NotBlank String username) {
         if (traineeService.selectTraineeByUsername(username).isPresent()){
             TraineeProfileResponse traineeProfile = traineeService.selectTraineeByUsername(username).get();
             return ResponseEntity.ok(traineeProfile);
@@ -46,7 +48,7 @@ public class TraineeController {
 
     @GetMapping("/{username}/trainers/unassigned")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<List<TrainerResponse>> getUnassignedTrainers(@PathVariable("username") String traineeUsername) {
+    public ResponseEntity<List<TrainerResponse>> getUnassignedTrainers(@PathVariable("username") @NotBlank String traineeUsername) {
         return ResponseEntity.ok(trainerService.findUnassignedTrainers(traineeUsername));
     }
 
@@ -67,14 +69,14 @@ public class TraineeController {
 
     @PutMapping()
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<TraineeProfileResponse> updateTrainee(@RequestBody TraineeUpdateRequest request){
+    public ResponseEntity<TraineeProfileResponse> updateTrainee(@Valid @RequestBody TraineeUpdateRequest request){
         TraineeProfileResponse trainee = traineeService.updateTrainee(request);
         return ResponseEntity.ok(trainee);
     }
 
     @PutMapping("/{username}/trainers")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<List<TrainerResponse>> updateTraineeTrainers(@PathVariable("username") String username,
+    public ResponseEntity<List<TrainerResponse>> updateTraineeTrainers(@PathVariable("username") @NotBlank String username,
                                                                        @RequestBody List<String> trainerUsernames) {
         var trainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
         return ResponseEntity.ok(trainers);
@@ -82,14 +84,14 @@ public class TraineeController {
 
     @DeleteMapping("/{username}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> deleteTrainee(@PathVariable("username") String username) {
+    public ResponseEntity<Void> deleteTrainee(@PathVariable("username") @NotBlank String username) {
         traineeService.deleteTrainee(username);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{username}/{active}")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> activateTrainer(@PathVariable("username") String username, @PathVariable("active") boolean isActive) {
+    public ResponseEntity<Void> activateTrainer(@PathVariable("username") @NotBlank String username, @PathVariable("active") @NotNull boolean isActive) {
         traineeService.activateDeactivateTrainee(username, isActive);
         return ResponseEntity.ok().build();
     }
