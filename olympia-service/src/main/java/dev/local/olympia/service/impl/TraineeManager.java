@@ -21,6 +21,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -38,6 +39,8 @@ public class TraineeManager implements TraineeService {
     private final TrainingDAO trainingDAO;
     private final TrainerDAO trainerDAO;
 
+    private final PasswordEncoder passwordEncoder;
+
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
@@ -45,11 +48,12 @@ public class TraineeManager implements TraineeService {
     public TraineeManager(
             TraineeDAO traineeDAO,
             TrainingDAO trainingDAO,
-            TrainerDAO trainerDAO,
+            TrainerDAO trainerDAO, PasswordEncoder passwordEncoder,
             UsernameGenerator usernameGenerator,
             PasswordGenerator passwordGenerator
     ) {
         this.traineeDAO = traineeDAO;
+        this.passwordEncoder = passwordEncoder;
         logger.info("TraineeManager initialized with TraineeDAO.");
         this.trainingDAO = trainingDAO;
         logger.info("TraineeManager initialized with TrainingDAO.");
@@ -74,11 +78,13 @@ public class TraineeManager implements TraineeService {
         );
         String randomPassword = passwordGenerator.generateRandomPassword(PASSWORD_LENGTH);
 
+        String hashedPassword = passwordEncoder.encode(randomPassword);
+
         Trainee newTrainee = new Trainee(
                 request.getFirstName(),
                 request.getLastName(),
                 uniqueUsername,
-                randomPassword,
+                hashedPassword,
                 request.getDateOfBirth(),
                 request.getAddress()
         );
@@ -92,7 +98,7 @@ public class TraineeManager implements TraineeService {
 
         return new AuthCredentials(
                 savedTrainee.getUser().getUsername(),
-                savedTrainee.getUser().getPassword()
+                randomPassword
         );
     }
 

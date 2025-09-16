@@ -19,12 +19,14 @@ public class TrainingController {
     }
 
     @PostMapping()
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> createTrainingSession(@Valid @RequestBody TrainingCreationRequest request) {
         trainingSessionService.createTraining(request);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/training-types")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainingTypeResponse>> getTrainingTypes() {
         return ResponseEntity.ok(trainingSessionService.trainingTypesList());
     }

@@ -37,6 +37,7 @@ public class TraineeController {
     }
 
     @GetMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TraineeProfileResponse> getTrainee(@PathVariable("username") @NotBlank String username) {
         if (traineeService.selectTraineeByUsername(username).isPresent()){
             TraineeProfileResponse traineeProfile = traineeService.selectTraineeByUsername(username).get();
@@ -46,11 +47,13 @@ public class TraineeController {
     }
 
     @GetMapping("/{username}/trainers/unassigned")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainerResponse>> getUnassignedTrainers(@PathVariable("username") @NotBlank String traineeUsername) {
         return ResponseEntity.ok(trainerService.findUnassignedTrainers(traineeUsername));
     }
 
     @GetMapping("/{username}/trainings")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainingResponse>> getTraineeTrainings(
             @PathVariable("username") String username,
             @RequestBody TraineeTrainingRequest request){
@@ -65,12 +68,14 @@ public class TraineeController {
     }
 
     @PutMapping()
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TraineeProfileResponse> updateTrainee(@Valid @RequestBody TraineeUpdateRequest request){
         TraineeProfileResponse trainee = traineeService.updateTrainee(request);
         return ResponseEntity.ok(trainee);
     }
 
     @PutMapping("/{username}/trainers")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainerResponse>> updateTraineeTrainers(@PathVariable("username") @NotBlank String username,
                                                                        @RequestBody List<String> trainerUsernames) {
         var trainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
@@ -78,12 +83,14 @@ public class TraineeController {
     }
 
     @DeleteMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> deleteTrainee(@PathVariable("username") @NotBlank String username) {
         traineeService.deleteTrainee(username);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{username}/{active}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> activateTrainer(@PathVariable("username") @NotBlank String username, @PathVariable("active") @NotNull boolean isActive) {
         traineeService.activateDeactivateTrainee(username, isActive);
         return ResponseEntity.ok().build();
