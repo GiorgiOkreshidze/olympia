@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,15 +29,18 @@ public class TrainingManager implements TrainingSessionService {
     private final TraineeDAO traineeDAO;
     private final TrainerDAO trainerDAO;
     private final TrainingTypeDAO trainingTypeDAO;
-    @Autowired
-    private WorkloadClient workloadClient;
 
     @Autowired
-    public TrainingManager(TrainingDAO trainingDAO, TraineeDAO traineeDAO, TrainerDAO trainerDAO, TrainingTypeDAO trainingTypeDAO) {
+    private WorkloadClient workloadClient;
+    private final JmsTemplate jmsTemplate;
+
+    @Autowired
+    public TrainingManager(TrainingDAO trainingDAO, TraineeDAO traineeDAO, TrainerDAO trainerDAO, TrainingTypeDAO trainingTypeDAO, JmsTemplate jmsTemplate) {
         this.trainingDAO = trainingDAO;
         this.traineeDAO = traineeDAO;
         this.trainerDAO = trainerDAO;
         this.trainingTypeDAO = trainingTypeDAO;
+        this.jmsTemplate = jmsTemplate;
         logger.info("TrainingManager initialized with TrainingDAO, TraineeDAO, TrainerDAO, TrainingTypeDAO.");
     }
 
@@ -84,8 +88,12 @@ public class TrainingManager implements TrainingSessionService {
                     .actionType("ADD")
                     .build();
 
-            workloadClient.updateWorkload(workloadRequest);
+            logger.info("Attempting to send message to ActiveMQ..."); // ADD THIS
+            jmsTemplate.convertAndSend("trainer.workload.queue", workloadRequest);
+            logger.info("Message sent!");
+            /*workloadClient.updateWorkload(workloadRequest);*/
         } catch (Exception e) {
+            logger.error("Failed to send ActiveMQ message", e);
             // Log it, but usually, we don't want to fail the Training creation
             // just because the stats service is down.
             // The Circuit Breaker fallback handles the specific connection errors,
