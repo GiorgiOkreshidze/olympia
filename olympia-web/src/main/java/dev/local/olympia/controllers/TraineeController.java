@@ -9,6 +9,7 @@ import dev.local.olympia.dto.training.requests.TraineeTrainingRequest;
 import dev.local.olympia.dto.training.responses.TrainingResponse;
 import dev.local.olympia.service.interfaces.TraineeService;
 import dev.local.olympia.service.interfaces.TrainerService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

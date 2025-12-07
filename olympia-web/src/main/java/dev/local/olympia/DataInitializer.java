@@ -4,7 +4,7 @@ import dev.local.olympia.domain.Trainee;
 import dev.local.olympia.domain.Trainer;
 import dev.local.olympia.domain.Training;
 import dev.local.olympia.domain.TrainingType;
-import dev.local.olympia.interfaces.MapStorage;
+//import dev.local.olympia.interfaces.MapStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;

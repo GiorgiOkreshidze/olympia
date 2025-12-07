@@ -1,6 +1,8 @@
 package dev.local.olympia.service.impl;
 
+import dev.local.olympia.client.WorkloadClient;
 import dev.local.olympia.domain.Training;
+import dev.local.olympia.dto.WorkloadRequest;
 import dev.local.olympia.dto.training.requests.TrainingCreationRequest;
 import dev.local.olympia.dto.training.responses.TrainingTypeResponse;
 import dev.local.olympia.exception.ResourceNotFoundException;
@@ -26,6 +28,8 @@ public class TrainingManager implements TrainingSessionService {
     private final TraineeDAO traineeDAO;
     private final TrainerDAO trainerDAO;
     private final TrainingTypeDAO trainingTypeDAO;
+    @Autowired
+    private WorkloadClient workloadClient;
 
     @Autowired
     public TrainingManager(TrainingDAO trainingDAO, TraineeDAO traineeDAO, TrainerDAO trainerDAO, TrainingTypeDAO trainingTypeDAO) {
@@ -68,6 +72,26 @@ public class TrainingManager implements TrainingSessionService {
         );
 
         Training savedTraining = trainingDAO.save(newTraining);
+
+        try {
+            WorkloadRequest workloadRequest = WorkloadRequest.builder()
+                    .username(trainer.getUser().getUsername())
+                    .firstName(trainer.getUser().getFirstName())
+                    .lastName(trainer.getUser().getLastName())
+                    .isActive(trainer.getUser().isActive())
+                    .trainingDate(newTraining.getTrainingDate())
+                    .trainingDuration(newTraining.getTrainingDurationSeconds())
+                    .actionType("ADD")
+                    .build();
+
+            workloadClient.updateWorkload(workloadRequest);
+        } catch (Exception e) {
+            // Log it, but usually, we don't want to fail the Training creation
+            // just because the stats service is down.
+            // The Circuit Breaker fallback handles the specific connection errors,
+            // this catch is a safety net.
+        }
+
         logger.info("Training created successfully with ID: {}", savedTraining.getId());
         return savedTraining;
     }

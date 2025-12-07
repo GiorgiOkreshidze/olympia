@@ -3,6 +3,7 @@ package dev.local.olympia.controllers;
 import dev.local.olympia.dto.training.requests.TrainingCreationRequest;
 import dev.local.olympia.dto.training.responses.TrainingTypeResponse;
 import dev.local.olympia.service.interfaces.TrainingSessionService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

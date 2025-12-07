@@ -5,6 +5,7 @@ import dev.local.olympia.Security.LoginAttemptService;
 import dev.local.olympia.dto.auth.AuthCredentials;
 import dev.local.olympia.dto.auth.PasswordChangeRequest;
 import dev.local.olympia.service.interfaces.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +33,8 @@ public class AuthController {
         this.loginAttemptService = loginAttemptService;
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody AuthCredentials authCredentials) {
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody AuthCredentials authCredentials) {
         boolean isAuthenticated = authService.authenticateUser(authCredentials);
         try {
             // Step 2: Delegate authentication to Spring Security

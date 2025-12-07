@@ -1,3 +1,4 @@
+/*
 package dev.local.olympia.impl;
 
 import dev.local.olympia.domain.Trainee;
@@ -62,3 +63,4 @@ public class InMemoryTrainingDAO implements TrainingDAO {
         }
     }
 }
+*/
